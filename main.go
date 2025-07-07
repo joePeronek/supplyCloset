@@ -1,14 +1,14 @@
 package main
 
 import (
-        "database/sql"
-        "encoding/json"
-        "log"
-        "net/http"
-        "os"
-        "strings"
-        "sync"
-        "time"
+	"database/sql"
+	"encoding/json"
+	"log"
+	"net/http"
+	"os"
+	"strings"
+	"sync"
+	"time"
 )
 
 type InventoryItem struct {
@@ -88,12 +88,23 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		mu.Lock()
 		if db != nil {
-			if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, name, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
-                               ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, name=EXCLUDED.name, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
-				it.ID, it.UniformType, it.Gender, it.Name, it.Style, it.Size, it.Quantity); err != nil {
-				mu.Unlock()
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
+			if it.ID == 0 {
+				row := db.QueryRow(`INSERT INTO inventory (uniform_type, gender, name, style, size, quantity)
+                                       VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+					it.UniformType, it.Gender, it.Name, it.Style, it.Size, it.Quantity)
+				if err := row.Scan(&it.ID); err != nil {
+					mu.Unlock()
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			} else {
+				if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, name, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                                       ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, name=EXCLUDED.name, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
+					it.ID, it.UniformType, it.Gender, it.Name, it.Style, it.Size, it.Quantity); err != nil {
+					mu.Unlock()
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
 			}
 		} else {
 			it.ID = nextID

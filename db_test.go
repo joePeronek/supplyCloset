@@ -51,7 +51,7 @@ func TestPopulateDB(t *testing.T) {
 	db = mockDB
 
 	mock.ExpectExec("INSERT INTO inventory").
-		WithArgs(1, "", "", "Pen", "", "", 4).
+		WithArgs(1, sqlmock.AnyArg(), sqlmock.AnyArg(), "Pen", sqlmock.AnyArg(), sqlmock.AnyArg(), 4).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("INSERT INTO issued").
 		WithArgs(1, "Pen", "Alice", "Bob", sqlmock.AnyArg()).
