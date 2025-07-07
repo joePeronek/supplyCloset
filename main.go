@@ -27,6 +27,7 @@ var (
 	items  = map[int]*InventoryItem{}
 	issued = []IssuedItem{}
 	mu     sync.Mutex
+	nextID = 1
 )
 
 func main() {
@@ -39,6 +40,14 @@ func main() {
 			log.Fatal(err)
 		}
 	}
+
+	mu.Lock()
+	for id := range items {
+		if id >= nextID {
+			nextID = id + 1
+		}
+	}
+	mu.Unlock()
 
 	http.Handle("/", http.FileServer(http.Dir("client")))
 	http.HandleFunc("/inventory", inventoryHandler)
@@ -64,6 +73,8 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		mu.Lock()
+		it.ID = nextID
+		nextID++
 		items[it.ID] = &it
 		if db != nil {
 			if _, err := db.Exec(`INSERT INTO inventory (id, name, quantity) VALUES ($1, $2, $3)
