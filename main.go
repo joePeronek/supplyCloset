@@ -14,7 +14,7 @@ type InventoryItem struct {
 	ID          int    `json:"id"`
 	UniformType string `json:"uniformType"`
 	Gender      string `json:"gender"`
-	Item        string `json:"item"`
+	Name        string `json:"name"`
 	Style       string `json:"style"`
 	Size        string `json:"size"`
 	Quantity    int    `json:"quantity"`
@@ -87,9 +87,9 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		mu.Lock()
 		if db != nil {
-			if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, item, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
-                               ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, item=EXCLUDED.item, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
-				it.ID, it.UniformType, it.Gender, it.Item, it.Style, it.Size, it.Quantity); err != nil {
+			if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, name, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                               ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, name=EXCLUDED.name, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
+				it.ID, it.UniformType, it.Gender, it.Name, it.Style, it.Size, it.Quantity); err != nil {
 				mu.Unlock()
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -146,7 +146,7 @@ func issueHandler(w http.ResponseWriter, r *http.Request) {
 	item.Quantity--
 	iss := IssuedItem{
 		ItemID:   req.ItemID,
-		ItemName: item.Item,
+		ItemName: item.Name,
 		Person:   req.Person,
 		IssuedBy: req.IssuedBy,
 		IssuedAt: time.Now(),
@@ -160,7 +160,7 @@ func issueHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if _, err := db.Exec(`INSERT INTO issued (item_id, item_name, person, issued_by, issued_at)
                        VALUES ($1, $2, $3, $4, $5)`,
-			req.ItemID, item.Item, req.Person, req.IssuedBy, iss.IssuedAt); err != nil {
+			req.ItemID, item.Name, req.Person, req.IssuedBy, iss.IssuedAt); err != nil {
 			mu.Unlock()
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -18,7 +18,7 @@ func initDB(conn string) error {
         id INT PRIMARY KEY,
         uniform_type TEXT,
         gender TEXT,
-        item TEXT,
+        name TEXT,
         style TEXT,
         size TEXT,
         quantity INT NOT NULL
@@ -26,15 +26,15 @@ func initDB(conn string) error {
 		return err
 	}
 	// handle upgrades from the old schema
-	// rename legacy "name" column to "item" if present
-	db.Exec(`ALTER TABLE inventory RENAME COLUMN name TO item`)
+	// rename legacy "item" column to "name" if present
+	db.Exec(`ALTER TABLE inventory RENAME COLUMN item TO name`)
 	// add any missing columns
 	alterCols := []string{
 		"ALTER TABLE inventory ADD COLUMN IF NOT EXISTS uniform_type TEXT",
 		"ALTER TABLE inventory ADD COLUMN IF NOT EXISTS gender TEXT",
 		"ALTER TABLE inventory ADD COLUMN IF NOT EXISTS style TEXT",
 		"ALTER TABLE inventory ADD COLUMN IF NOT EXISTS size TEXT",
-		"ALTER TABLE inventory ADD COLUMN IF NOT EXISTS item TEXT",
+		"ALTER TABLE inventory ADD COLUMN IF NOT EXISTS name TEXT",
 	}
 	for _, stmt := range alterCols {
 		if _, err := db.Exec(stmt); err != nil {
@@ -55,7 +55,7 @@ func initDB(conn string) error {
 }
 
 func loadData() error {
-	invRows, err := db.Query(`SELECT id, uniform_type, gender, item, style, size, quantity FROM inventory`)
+	invRows, err := db.Query(`SELECT id, uniform_type, gender, name, style, size, quantity FROM inventory`)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func loadData() error {
 	mu.Lock()
 	for invRows.Next() {
 		var it InventoryItem
-		if err := invRows.Scan(&it.ID, &it.UniformType, &it.Gender, &it.Item, &it.Style, &it.Size, &it.Quantity); err != nil {
+		if err := invRows.Scan(&it.ID, &it.UniformType, &it.Gender, &it.Name, &it.Style, &it.Size, &it.Quantity); err != nil {
 			mu.Unlock()
 			return err
 		}
@@ -91,9 +91,9 @@ func loadData() error {
 
 func populateDB() error {
 	for _, it := range items {
-		if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, item, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, item=EXCLUDED.item, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
-			it.ID, it.UniformType, it.Gender, it.Item, it.Style, it.Size, it.Quantity); err != nil {
+		if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, name, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, name=EXCLUDED.name, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
+			it.ID, it.UniformType, it.Gender, it.Name, it.Style, it.Size, it.Quantity); err != nil {
 			return err
 		}
 	}

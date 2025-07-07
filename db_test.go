@@ -15,9 +15,9 @@ func TestLoadData(t *testing.T) {
 	}
 	db = mockDB
 
-	invRows := sqlmock.NewRows([]string{"id", "name", "quantity"}).
-		AddRow(1, "Pen", 3)
-	mock.ExpectQuery("SELECT id, name, quantity FROM inventory").
+	invRows := sqlmock.NewRows([]string{"id", "uniform_type", "gender", "name", "style", "size", "quantity"}).
+		AddRow(1, "", "", "Pen", "", "", 3)
+	mock.ExpectQuery("SELECT id, uniform_type, gender, name, style, size, quantity FROM inventory").
 		WillReturnRows(invRows)
 
 	issRows := sqlmock.NewRows([]string{"item_id", "item_name", "person", "issued_by", "issued_at"}).
@@ -51,7 +51,7 @@ func TestPopulateDB(t *testing.T) {
 	db = mockDB
 
 	mock.ExpectExec("INSERT INTO inventory").
-		WithArgs(1, "Pen", 4).
+		WithArgs(1, "", "", "Pen", "", "", 4).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec("INSERT INTO issued").
 		WithArgs(1, "Pen", "Alice", "Bob", sqlmock.AnyArg()).
