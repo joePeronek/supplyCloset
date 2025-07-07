@@ -14,7 +14,7 @@ func initDB(conn string) error {
 		return err
 	}
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS inventory (
-        id INT PRIMARY KEY,
+        id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         quantity INT NOT NULL
     )`); err != nil {

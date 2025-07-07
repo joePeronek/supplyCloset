@@ -82,20 +82,24 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		mu.Lock()
-		it.ID = nextID
-		nextID++
-		items[it.ID] = &it
 		if db != nil {
-			if _, err := db.Exec(`INSERT INTO inventory (id, name, quantity) VALUES ($1, $2, $3)
-                               ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, quantity=EXCLUDED.quantity`,
-				it.ID, it.Name, it.Quantity); err != nil {
+			if err := db.QueryRow(`INSERT INTO inventory (name, quantity) VALUES ($1, $2) RETURNING id`,
+				it.Name, it.Quantity).Scan(&it.ID); err != nil {
 				mu.Unlock()
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+		} else {
+			it.ID = nextID
+			nextID++
 		}
+		items[it.ID] = &it
 		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(struct {
+			ID int `json:"id"`
+		}{it.ID})
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
