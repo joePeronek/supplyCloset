@@ -15,12 +15,14 @@ func initDB(conn string) error {
 	}
 	// create new inventory table if it doesn't exist
 	if _, err := db.Exec(`CREATE TABLE IF NOT EXISTS inventory (
+        codex/modify-inventory-table-and-update-handlers
         id INT PRIMARY KEY,
         uniform_type TEXT,
         gender TEXT,
         item TEXT,
         style TEXT,
         size TEXT,
+         main
         quantity INT NOT NULL
     )`); err != nil {
 		return err

@@ -15,3 +15,15 @@ DATABASE_URL=postgres://username:password@host:port/dbname sslmode=require go ru
 ```
 
 Without `DATABASE_URL`, the application continues to operate in memory only.
+
+## Database Migrations
+
+Schema changes are managed through simple SQL migration files stored in the
+`migrations` directory. To apply all migrations to the database specified by the
+`DATABASE_URL` environment variable run:
+
+```bash
+scripts/migrate.sh
+```
+
+The script applies each `*.sql` file in order using `psql`.

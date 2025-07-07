@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -76,21 +77,36 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if strings.TrimSpace(it.Name) == "" {
+			http.Error(w, "name is required", http.StatusBadRequest)
+			return
+		}
+		if it.Quantity < 0 {
+			http.Error(w, "quantity must be non-negative", http.StatusBadRequest)
+			return
+		}
 		mu.Lock()
-		it.ID = nextID
-		nextID++
-		items[it.ID] = &it
 		if db != nil {
+        codex/modify-inventory-table-and-update-handlers
 			if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, item, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
                                ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, item=EXCLUDED.item, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
 				it.ID, it.UniformType, it.Gender, it.Item, it.Style, it.Size, it.Quantity); err != nil {
+       main
 				mu.Unlock()
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+		} else {
+			it.ID = nextID
+			nextID++
 		}
+		items[it.ID] = &it
 		mu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(struct {
+			ID int `json:"id"`
+		}{it.ID})
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
@@ -108,6 +124,18 @@ func issueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.ItemID <= 0 {
+		http.Error(w, "itemId must be positive", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(req.Person) == "" {
+		http.Error(w, "person is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(req.IssuedBy) == "" {
+		http.Error(w, "issuedBy is required", http.StatusBadRequest)
 		return
 	}
 	mu.Lock()
