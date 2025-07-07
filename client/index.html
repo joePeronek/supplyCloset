@@ -12,17 +12,60 @@
     <script type="text/babel">
       const { useState, useEffect } = React;
 
+      function AddItemForm({ onAdd }) {
+        const [id, setId] = useState('');
+        const [name, setName] = useState('');
+        const [quantity, setQuantity] = useState('');
+
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          fetch('/inventory', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id: Number(id),
+              name,
+              quantity: Number(quantity)
+            })
+          }).then(res => {
+            if (res.ok) {
+              setId('');
+              setName('');
+              setQuantity('');
+              onAdd && onAdd();
+            } else {
+              res.text().then(t => alert(t));
+            }
+          });
+        };
+
+        return (
+          <form onSubmit={handleSubmit} style={{ marginBottom: '1em' }}>
+            <h2>Add Item</h2>
+            <input required type="number" placeholder="ID" value={id} onChange={e => setId(e.target.value)} />{' '}
+            <input required placeholder="Name" value={name} onChange={e => setName(e.target.value)} />{' '}
+            <input required type="number" placeholder="Quantity" value={quantity} onChange={e => setQuantity(e.target.value)} />{' '}
+            <button type="submit">Add</button>
+          </form>
+        );
+      }
+
       function App() {
         const [inventory, setInventory] = useState([]);
         const [issued, setIssued] = useState([]);
 
-        useEffect(() => {
+        const loadInventory = () => {
           fetch('/inventory').then(res => res.json()).then(setInventory);
+        };
+
+        useEffect(() => {
+          loadInventory();
           fetch('/issued').then(res => res.json()).then(setIssued);
         }, []);
 
         return (
           <div>
+            <AddItemForm onAdd={loadInventory} />
             <h1>Inventory</h1>
             <table border="1" cellPadding="5">
               <thead>
