@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -72,6 +73,14 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if strings.TrimSpace(it.Name) == "" {
+			http.Error(w, "name is required", http.StatusBadRequest)
+			return
+		}
+		if it.Quantity < 0 {
+			http.Error(w, "quantity must be non-negative", http.StatusBadRequest)
+			return
+		}
 		mu.Lock()
 		it.ID = nextID
 		nextID++
@@ -104,6 +113,18 @@ func issueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if req.ItemID <= 0 {
+		http.Error(w, "itemId must be positive", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(req.Person) == "" {
+		http.Error(w, "person is required", http.StatusBadRequest)
+		return
+	}
+	if strings.TrimSpace(req.IssuedBy) == "" {
+		http.Error(w, "issuedBy is required", http.StatusBadRequest)
 		return
 	}
 	mu.Lock()
