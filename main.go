@@ -87,11 +87,9 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		mu.Lock()
 		if db != nil {
-        codex/modify-inventory-table-and-update-handlers
 			if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, item, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
                                ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, item=EXCLUDED.item, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
 				it.ID, it.UniformType, it.Gender, it.Item, it.Style, it.Size, it.Quantity); err != nil {
-       main
 				mu.Unlock()
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
