@@ -24,11 +24,24 @@
         return (
           <div>
             <h1>Inventory</h1>
-            <ul>
-              {inventory.map(item => (
-                <li key={item.id}>{item.name}: {item.quantity}</li>
-              ))}
-            </ul>
+            <table border="1" cellPadding="5">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {inventory.map(item => (
+                  <tr key={item.id}>
+                    <td>{item.id}</td>
+                    <td>{item.name}</td>
+                    <td>{item.quantity}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             <h1>Issued Items</h1>
             <ul>
               {issued.map((iss, idx) => (
