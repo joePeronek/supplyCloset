@@ -11,9 +11,13 @@ import (
 )
 
 type InventoryItem struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Quantity int    `json:"quantity"`
+	ID          int    `json:"id"`
+	UniformType string `json:"uniformType"`
+	Gender      string `json:"gender"`
+	Item        string `json:"item"`
+	Style       string `json:"style"`
+	Size        string `json:"size"`
+	Quantity    int    `json:"quantity"`
 }
 
 type IssuedItem struct {
@@ -83,8 +87,11 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		mu.Lock()
 		if db != nil {
-			if err := db.QueryRow(`INSERT INTO inventory (name, quantity) VALUES ($1, $2) RETURNING id`,
-				it.Name, it.Quantity).Scan(&it.ID); err != nil {
+        codex/modify-inventory-table-and-update-handlers
+			if _, err := db.Exec(`INSERT INTO inventory (id, uniform_type, gender, item, style, size, quantity) VALUES ($1, $2, $3, $4, $5, $6, $7)
+                               ON CONFLICT (id) DO UPDATE SET uniform_type=EXCLUDED.uniform_type, gender=EXCLUDED.gender, item=EXCLUDED.item, style=EXCLUDED.style, size=EXCLUDED.size, quantity=EXCLUDED.quantity`,
+				it.ID, it.UniformType, it.Gender, it.Item, it.Style, it.Size, it.Quantity); err != nil {
+       main
 				mu.Unlock()
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -141,7 +148,7 @@ func issueHandler(w http.ResponseWriter, r *http.Request) {
 	item.Quantity--
 	iss := IssuedItem{
 		ItemID:   req.ItemID,
-		ItemName: item.Name,
+		ItemName: item.Item,
 		Person:   req.Person,
 		IssuedBy: req.IssuedBy,
 		IssuedAt: time.Now(),
@@ -155,7 +162,7 @@ func issueHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		if _, err := db.Exec(`INSERT INTO issued (item_id, item_name, person, issued_by, issued_at)
                        VALUES ($1, $2, $3, $4, $5)`,
-			req.ItemID, item.Name, req.Person, req.IssuedBy, iss.IssuedAt); err != nil {
+			req.ItemID, item.Item, req.Person, req.IssuedBy, iss.IssuedAt); err != nil {
 			mu.Unlock()
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
