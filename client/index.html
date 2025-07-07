@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Supply Closet</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { useState, useEffect } = React;
+
+      function App() {
+        const [inventory, setInventory] = useState([]);
+        const [issued, setIssued] = useState([]);
+
+        useEffect(() => {
+          fetch('/inventory').then(res => res.json()).then(setInventory);
+          fetch('/issued').then(res => res.json()).then(setIssued);
+        }, []);
+
+        return (
+          <div>
+            <h1>Inventory</h1>
+            <ul>
+              {inventory.map(item => (
+                <li key={item.id}>{item.name}: {item.quantity}</li>
+              ))}
+            </ul>
+            <h1>Issued Items</h1>
+            <ul>
+              {issued.map((iss, idx) => (
+                <li key={idx}>{iss.itemName} to {iss.person} by {iss.issuedBy} at {iss.issuedAt}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+
+      ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
