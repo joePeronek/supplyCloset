@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -28,11 +30,21 @@ var (
 )
 
 func main() {
+	conn := os.Getenv("DATABASE_URL")
+	if conn != "" {
+		if err := initDB(conn); err != nil {
+			log.Fatal(err)
+		}
+		if err := loadData(); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	http.Handle("/", http.FileServer(http.Dir("client")))
 	http.HandleFunc("/inventory", inventoryHandler)
 	http.HandleFunc("/issue", issueHandler)
 	http.HandleFunc("/issued", issuedHandler)
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func inventoryHandler(w http.ResponseWriter, r *http.Request) {
@@ -53,6 +65,15 @@ func inventoryHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		mu.Lock()
 		items[it.ID] = &it
+		if db != nil {
+			if _, err := db.Exec(`INSERT INTO inventory (id, name, quantity) VALUES ($1, $2, $3)
+                               ON CONFLICT (id) DO UPDATE SET name=EXCLUDED.name, quantity=EXCLUDED.quantity`,
+				it.ID, it.Name, it.Quantity); err != nil {
+				mu.Unlock()
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
 		mu.Unlock()
 		w.WriteHeader(http.StatusCreated)
 	default:
@@ -90,6 +111,20 @@ func issueHandler(w http.ResponseWriter, r *http.Request) {
 		IssuedAt: time.Now(),
 	}
 	issued = append(issued, iss)
+	if db != nil {
+		if _, err := db.Exec(`UPDATE inventory SET quantity = quantity - 1 WHERE id = $1`, req.ItemID); err != nil {
+			mu.Unlock()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		if _, err := db.Exec(`INSERT INTO issued (item_id, item_name, person, issued_by, issued_at)
+                       VALUES ($1, $2, $3, $4, $5)`,
+			req.ItemID, item.Name, req.Person, req.IssuedBy, iss.IssuedAt); err != nil {
+			mu.Unlock()
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 	mu.Unlock()
 	w.WriteHeader(http.StatusCreated)
 }
