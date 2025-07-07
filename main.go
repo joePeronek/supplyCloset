@@ -11,13 +11,13 @@ import (
 )
 
 type InventoryItem struct {
-	ID          int    `json:"id"`
-	UniformType string `json:"uniformType"`
-	Gender      string `json:"gender"`
-	Name        string `json:"name"`
-	Style       string `json:"style"`
-	Size        string `json:"size"`
-	Quantity    int    `json:"quantity"`
+	ID          int            `json:"id"`
+	UniformType sql.NullString `json:"uniformType"`
+	Gender      sql.NullString `json:"gender"`
+	Name        string         `json:"name"`
+	Style       sql.NullString `json:"style"`
+	Size        sql.NullString `json:"size"`
+	Quantity    int            `json:"quantity"`
 }
 
 type IssuedItem struct {
