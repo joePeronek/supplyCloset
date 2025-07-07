@@ -3,12 +3,13 @@
 <head>
     <meta charset="utf-8">
     <title>Supply Closet</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root" class="container my-4"></div>
     <script type="text/babel">
       const { useState, useEffect } = React;
 
@@ -37,11 +38,19 @@
         };
 
         return (
-          <form onSubmit={handleSubmit} style={{ marginBottom: '1em' }}>
-            <h2>Add Item</h2>
-            <input required placeholder="Name" value={name} onChange={e => setName(e.target.value)} />{' '}
-            <input required type="number" placeholder="Quantity" value={quantity} onChange={e => setQuantity(e.target.value)} />{' '}
-            <button type="submit">Add</button>
+          <form onSubmit={handleSubmit} className="card p-3 mb-4">
+            <h2 className="h5 mb-3">Add Item</h2>
+            <div className="row g-2 align-items-end">
+              <div className="col">
+                <input required className="form-control" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
+              </div>
+              <div className="col">
+                <input required type="number" min="0" className="form-control" placeholder="Quantity" value={quantity} onChange={e => setQuantity(e.target.value)} />
+              </div>
+              <div className="col-auto">
+                <button type="submit" className="btn btn-primary">Add</button>
+              </div>
+            </div>
           </form>
         );
       }
@@ -61,9 +70,10 @@
 
         return (
           <div>
+            <h1 className="mb-4">Supply Closet</h1>
             <AddItemForm onAdd={loadInventory} />
-            <h1>Inventory</h1>
-            <table border="1" cellPadding="5">
+            <h1 className="mb-3">Inventory</h1>
+            <table className="table table-striped">
               <thead>
                 <tr>
                   <th>ID</th>
@@ -81,10 +91,12 @@
                 ))}
               </tbody>
             </table>
-            <h1>Issued Items</h1>
-            <ul>
+            <h1 className="mt-4">Issued Items</h1>
+            <ul className="list-group">
               {issued.map((iss, idx) => (
-                <li key={idx}>{iss.itemName} to {iss.person} by {iss.issuedBy} at {iss.issuedAt}</li>
+                <li key={idx} className="list-group-item">
+                  {iss.itemName} to {iss.person} by {iss.issuedBy} at {iss.issuedAt}
+                </li>
               ))}
             </ul>
           </div>
@@ -93,5 +105,6 @@
 
       ReactDOM.render(<App />, document.getElementById('root'));
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
