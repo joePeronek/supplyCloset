@@ -23,9 +23,9 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              id: parseInt(id, 10),
+              id: Number(id),
               name,
-              quantity: parseInt(quantity, 10)
+              quantity: Number(quantity)
             })
           }).then(res => {
             if (res.ok) {
@@ -42,7 +42,7 @@
         return (
           <form onSubmit={handleSubmit} style={{ marginBottom: '1em' }}>
             <h2>Add Item</h2>
-            <input required placeholder="ID" value={id} onChange={e => setId(e.target.value)} />{' '}
+            <input required type="number" placeholder="ID" value={id} onChange={e => setId(e.target.value)} />{' '}
             <input required placeholder="Name" value={name} onChange={e => setName(e.target.value)} />{' '}
             <input required type="number" placeholder="Quantity" value={quantity} onChange={e => setQuantity(e.target.value)} />{' '}
             <button type="submit">Add</button>
