@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/DATA-DOG/go-sqlmock"
 )
 
 func resetState() {
@@ -56,6 +58,64 @@ func TestInventoryHandlerPost(t *testing.T) {
 	it := items[1]
 	if it.Name != "Marker" || it.Quantity != 5 {
 		t.Fatalf("unexpected item: %+v", it)
+	}
+}
+
+func TestInventoryHandlerPostDBAutoID(t *testing.T) {
+	resetState()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("sqlmock new: %v", err)
+	}
+	db = mockDB
+
+	mock.ExpectQuery("INSERT INTO inventory").
+		WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), "Marker", sqlmock.AnyArg(), sqlmock.AnyArg(), 5).
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow(42))
+
+	body := strings.NewReader(`{"name":"Marker","quantity":5}`)
+	req := httptest.NewRequest(http.MethodPost, "/inventory", body)
+	rr := httptest.NewRecorder()
+
+	inventoryHandler(rr, req)
+
+	if rr.Code != http.StatusCreated {
+		t.Fatalf("expected status 201, got %d", rr.Code)
+	}
+	if items[42] == nil || items[42].Name != "Marker" {
+		t.Fatalf("item not added with generated id")
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet expectations: %v", err)
+	}
+}
+
+func TestInventoryHandlerPostDBWithID(t *testing.T) {
+	resetState()
+	mockDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("sqlmock new: %v", err)
+	}
+	db = mockDB
+
+	mock.ExpectExec("INSERT INTO inventory").
+		WithArgs(5, sqlmock.AnyArg(), sqlmock.AnyArg(), "Marker", sqlmock.AnyArg(), sqlmock.AnyArg(), 2).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	body := strings.NewReader(`{"id":5,"name":"Marker","quantity":2}`)
+	req := httptest.NewRequest(http.MethodPost, "/inventory", body)
+	rr := httptest.NewRecorder()
+
+	inventoryHandler(rr, req)
+
+	if rr.Code != http.StatusCreated {
+		t.Fatalf("expected status 201, got %d", rr.Code)
+	}
+	if items[5] == nil || items[5].Quantity != 2 {
+		t.Fatalf("item not stored with provided id")
+	}
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Fatalf("unmet expectations: %v", err)
 	}
 }
 
