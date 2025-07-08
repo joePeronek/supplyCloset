@@ -16,6 +16,10 @@
       function AddItemForm({ onAdd }) {
         const [name, setName] = useState('');
         const [quantity, setQuantity] = useState('');
+        const [uniformType, setUniformType] = useState('');
+        const [gender, setGender] = useState('');
+        const [style, setStyle] = useState('');
+        const [size, setSize] = useState('');
 
         const handleSubmit = (e) => {
           e.preventDefault();
@@ -24,12 +28,20 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               name,
-              quantity: Number(quantity)
+              quantity: Number(quantity),
+              uniformType: uniformType || null,
+              gender: gender || null,
+              style: style || null,
+              size: size || null
             })
           }).then(res => {
             if (res.ok) {
               setName('');
               setQuantity('');
+              setUniformType('');
+              setGender('');
+              setStyle('');
+              setSize('');
               onAdd && onAdd();
             } else {
               res.text().then(t => alert(t));
@@ -40,6 +52,20 @@
         return (
           <form onSubmit={handleSubmit} className="card p-3 mb-4">
             <h2 className="h5 mb-3">Add Item</h2>
+            <div className="row g-2 align-items-end mb-2">
+              <div className="col">
+                <input className="form-control" placeholder="Uniform Type" value={uniformType} onChange={e => setUniformType(e.target.value)} />
+              </div>
+              <div className="col">
+                <input className="form-control" placeholder="Gender" value={gender} onChange={e => setGender(e.target.value)} />
+              </div>
+              <div className="col">
+                <input className="form-control" placeholder="Style" value={style} onChange={e => setStyle(e.target.value)} />
+              </div>
+              <div className="col">
+                <input className="form-control" placeholder="Size" value={size} onChange={e => setSize(e.target.value)} />
+              </div>
+            </div>
             <div className="row g-2 align-items-end">
               <div className="col">
                 <input required className="form-control" placeholder="Name" value={name} onChange={e => setName(e.target.value)} />
@@ -77,7 +103,11 @@
               <thead>
                 <tr>
                   <th>ID</th>
+                  <th>Uniform Type</th>
+                  <th>Gender</th>
                   <th>Name</th>
+                  <th>Style</th>
+                  <th>Size</th>
                   <th>Quantity</th>
                 </tr>
               </thead>
@@ -85,7 +115,11 @@
                 {inventory.map(item => (
                   <tr key={item.id}>
                     <td>{item.id}</td>
+                    <td>{item.uniformType || ''}</td>
+                    <td>{item.gender || ''}</td>
                     <td>{item.name}</td>
+                    <td>{item.style || ''}</td>
+                    <td>{item.size || ''}</td>
                     <td>{item.quantity}</td>
                   </tr>
                 ))}
