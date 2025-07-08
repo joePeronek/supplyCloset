@@ -2,14 +2,14 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
 var db *sql.DB
 
 func initDB(conn string) error {
 	var err error
-	db, err = sql.Open("postgres", conn)
+	db, err = sql.Open("pgx", conn)
 	if err != nil {
 		return err
 	}
